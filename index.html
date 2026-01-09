@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Will You Be My Valentine? 💖</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .card {
+      background: white;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 24px;
+      padding: 24px 20px 32px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      animation: fadeSlide 0.5s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 { font-size: 1.6rem; margin-bottom: 10px; }
+    p { font-size: 1rem; margin-bottom: 16px; }
+
+    img {
+      width: 100%;
+      max-height: 220px;
+      object-fit: contain;
+      margin-bottom: 14px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:active { transform: scale(0.95); }
+
+    .yes {
+      background: #ff4d6d;
+      color: white;
+      box-shadow: 0 8px 20px rgba(255,77,109,0.4);
+    }
+
+    .no {
+      background: #eee;
+      color: #444;
+    }
+
+    .heartbeat {
+      animation: heartbeat 1.4s infinite;
+    }
+
+    @keyframes heartbeat {
+      0% { transform: scale(1); }
+      25% { transform: scale(1.08); }
+      40% { transform: scale(1); }
+      60% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
+    .big-yes {
+      width: 100%;
+      font-size: 1.4rem;
+      padding: 18px;
+    }
+
+    /* Floating hearts */
+    .floating-heart {
+      position: fixed;
+      bottom: -20px;
+      font-size: 18px;
+      animation: floatUp 6s linear forwards;
+      opacity: 0.7;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes floatUp {
+      to { transform: translateY(-110vh) scale(1.4); opacity: 0; }
+    }
+
+    /* Photo grid */
+    .photo-grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .photo-grid img {
+      width: 100%;
+      border-radius: 16px;
+      cursor: pointer;
+      opacity: 0;
+      animation: fadeIn 1s ease forwards;
+    }
+
+    .photo-grid img:nth-child(1) { animation-delay: 0.2s; }
+    .photo-grid img:nth-child(2) { animation-delay: 0.4s; }
+    .photo-grid img:nth-child(3) { animation-delay: 0.6s; }
+    .photo-grid img:nth-child(4) { animation-delay: 0.8s; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .modal img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 16px;
+    }
+
+    /* Confetti */
+    .confetti {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      top: -10px;
+      animation: fall 3s linear forwards;
+      z-index: 1000;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <audio id="bgm" loop></audio>
+  <div class="card" id="card"></div>
+
+  <script>
+    let stageIndex = 0;
+    let noCount = 0;
+    let dodgeCount = 0;
+    let dodgeEnabled = false;
+
+    const musicSrc = "Valentineactual.mp3";
+
+    const introSlides = [
+      {
+        title: "HIII LOOOVEEE",
+        text: "I am kinda dumb and talentless so this really all I could think of, hope you like it...",
+        gif: "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMDhpc3BhOTN0cW9hdG9jcjEzZHBiZmo3eTRiNDg3dnhtZnU0OHkwdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/JHxzdprX2FItgcpct5/giphy.gif"
+      },
+      {
+        title: "Firstly, HAPPY ANNIVERSARY 💗",
+        text: "These were probably the best 10 months of my life, and with you, my life keeps improving every day.   I LOVE YOU 💗",
+        gif: "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3YjlpZGdjeHlrcGR1NmI4a205ajI0NXpobDcwMzR1djFyd2htc2JxaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/bupVwcJFihcJUwqwI1/giphy.gif"
+      },
+      {
+        title: "Time for the highly anticipated question I guess 🫣",
+        text: "And your answer means everything to me ❤️❤️",
+        gif: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamowbjI2eTVkdnh2cGVka3lkam9lMWZiemY3ZDYyMm5yenlzdm8ycyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/XYEEvoX0Ub69ZgN9ai/giphy.gif"
+      }
+    ];
+
+    const noMessages = [
+      "Press ''Yes'' na please? 🥺",
+      "Please think again princess 💔",
+      "But you are my wifeyy 😭",
+      "I'll give you all my snacks and we can snack on each other too 🍫🤭",
+      "This is your last chance... 😢"
+    ];
+
+    const pleaseGif = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExa25kcDhkcmtuNm4xb3ppa2Z1Zm81MHhqZzJ4Z215NnpkN2RvbGppbyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/K6WIhJ07gwGkIAQfwN/giphy.gif";
+
+    function vibrate() {
+      if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+    }
+
+    function render() {
+      const card = document.getElementById('card');
+      card.style.animation = 'none';
+      card.offsetHeight;
+      card.style.animation = null;
+
+      if (stageIndex < introSlides.length) {
+        const s = introSlides[stageIndex];
+        card.innerHTML = `
+          <img src="${s.gif}" />
+          <h1>${s.title}</h1>
+          <p>${s.text}</p>
+          <button class="yes heartbeat" onclick="nextStage()">Next ➜</button>
+        `;
+        return;
+      }
+
+      if (noCount < 5) {
+        dodgeCount = 0;
+        dodgeEnabled = Math.random() < 0.6;
+        card.innerHTML = `
+          <img src="${pleaseGif}" />
+          <h1>Jyotmeher Bedi, my love, my everything, will you be my Valentine?</h1>
+          <p>${noMessages[noCount]}</p>
+          <div class="buttons">
+            <button class="yes heartbeat" onclick="sayYes()">Yes 💖</button>
+            <button class="no" id="noBtn" ontouchstart="moveNo()" onmouseover="moveNo()" onclick="sayNo()">No 🙃</button>
+          </div>
+        `;
+      } else {
+        card.innerHTML = `
+          <img src="${pleaseGif}" />
+          <h1>Well, too bad, you are stuck with me, so only one option 😘❤️🥰</h1>
+          <button class="yes heartbeat big-yes" onclick="sayYes()">YESSS 💕</button>
+        `;
+      }
+    }
+
+    function nextStage() {
+      vibrate();
+      if (stageIndex === 0) {
+        const bgm = document.getElementById('bgm');
+        bgm.src = musicSrc;
+        bgm.volume = 0.4;
+        bgm.play().catch(() => {});
+      }
+      stageIndex++;
+      render();
+    }
+
+    function sayNo() {
+      noCount++;
+      render();
+    }
+
+    function moveNo() {
+      const btn = document.getElementById('noBtn');
+      if (!btn || !dodgeEnabled || dodgeCount >= 2) return;
+      dodgeCount++;
+      const x = Math.random() * 180 - 90;
+      const y = Math.random() * 180 - 90;
+      btn.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    function sayYes() {
+      vibrate();
+      const card = document.getElementById('card');
+      card.innerHTML = `
+        <h1>YAYYY!!! 🎉💖</h1>
+        <p>Thank you for renewing the contract princess 🤭🤭, I am honoured.</p>
+        <p style="font-style:italic;">I know this wasn't much but I am always gonna deliver on my promises, I LOOVEE YOUUU JYOT❤️</p>
+        <div class="photo-grid">
+          <img src="photo1.jpg" onclick="openModal(this.src)" />
+          <img src="photo2.jpg" onclick="openModal(this.src)" />
+          <img src="photo3.jpg" onclick="openModal(this.src)" />
+          <img src="photo4.jpg" onclick="openModal(this.src)" />
+          <img src="photo5.jpg" onclick="openModal(this.src)" />
+          <img src="photo6.jpg" onclick="openModal(this.src)" />
+          
+        </div>
+      `;
+      launchConfetti();
+    }
+
+    function openModal(src) {
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.innerHTML = `<img src="${src}" />`;
+      modal.onclick = () => modal.remove();
+      document.body.appendChild(modal);
+    }
+
+    function launchConfetti() {
+      for (let i = 0; i < 80; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.background = `hsl(${Math.random() * 360},100%,60%)`;
+        c.style.animationDelay = Math.random() * 2 + 's';
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 3000);
+      }
+    }
+
+    // Floating hearts
+    setInterval(() => {
+      const heart = document.createElement('div');
+      heart.className = 'floating-heart';
+      heart.textContent = '💖';
+      heart.style.left = Math.random() * 100 + 'vw';
+      heart.style.animationDuration = 4 + Math.random() * 4 + 's';
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 7000);
+    }, 500);
+
+    render();
+  </script>
+</body>
+</html>
